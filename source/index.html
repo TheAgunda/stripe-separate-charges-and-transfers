@@ -1,0 +1,35 @@
+<html>
+
+<head>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+
+<body>
+    <div id="stripeElement">
+    </div>
+    <button id="click">dddd</button>
+    <script>
+        var stripe = Stripe('pk_test_A7jK4iCYHL045qgjjfzAfPxu');
+        var elements = stripe.elements();
+        var card = elements.create("card", { hidePostalCode: true });
+        card.mount("#stripeElement");
+
+        document.getElementById("click").addEventListener("click", function () {
+            stripe.createPaymentMethod({
+                type: 'card',
+                card: card,
+                // billing_details: {
+                //     name: 'Jenny Rosen',
+                // },
+            }).then(function (result) {
+                console.log(result);
+                // Handle result.error or result.paymentMethod
+            });
+
+
+            
+        })
+    </script>
+</body>
+
+</html>
