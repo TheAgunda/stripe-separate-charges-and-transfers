@@ -95,6 +95,16 @@ app.get('/connect-account/:id', async function (req, res) {
         return res.json(error);
     }
 });
+app.get('/connect-account', async function (req, res) {
+    try {
+
+        const account = await stripe.accounts.list();
+        return res.json(account);
+    } catch (error: any) {
+        return res.json(error);
+    }
+});
+
 app.delete('/connect-account/:id', async function (req, res) {
     try {
         const { id } = req.params;
@@ -103,7 +113,7 @@ app.delete('/connect-account/:id', async function (req, res) {
     } catch (error: any) {
         return res.json(error);
     }
-})
+});
 
 app.get('/payment-method', async function (req, res) {
     return res.sendFile(__dirname + '/index.html');
@@ -159,6 +169,16 @@ app.post('/transfer', async function (req, res) {
             description: 'description',
         });
         return res.json(transfer);
+    } catch (error: any) {
+        return res.json(error);
+    }
+});
+
+app.get('/balance-transactions/:id', async function (req, res) {
+    try {
+        const { id } = req.params;
+        const balanceTransactions = await stripe.balanceTransactions.retrieve(id);
+        return res.json(balanceTransactions);
     } catch (error: any) {
         return res.json(error);
     }
