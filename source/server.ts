@@ -1,11 +1,19 @@
 import Express, { response } from "express";
 import Stripe from "stripe";
 const app = Express();
-const stripe = new Stripe('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
+const stripe = new Stripe('sk_test_51O4BHPLEn5AbYWhqGUSbTy5Hf5ZYexsXAyk6Yu4S9Qpju7fOszgTF2afSSvm9AmtbtGIyEXzZgifzK1l43lcf2wE00PleLyeyQ');
 
 app.use(Express.json());
 app.use(Express.urlencoded({ extended: false }));
-
+app.get('/connect-account', async function (req, res) {
+    try {
+        let query: any = req.query;
+        const account = await stripe.accounts.list({ limit: query.limit ?? 20 });
+        return res.json(account);
+    } catch (error: any) {
+        return res.json(error);
+    }
+});
 app.post('/connect-account', async function (req, res) {
     try {
         const email = 'test@gmail.com';
@@ -90,20 +98,18 @@ app.get('/connect-account/:id', async function (req, res) {
     try {
         const { id } = req.params;
         const account = await stripe.accounts.retrieve({ stripeAccount: id });
+        const requirements = account.requirements;
+        if (requirements && requirements.currently_due?.length !== 0 && requirements.errors?.length !== 0) {
+            console.log('Connect account is complete and verified.');
+        } else {
+            console.log('Connect account is not yet complete or verified.', requirements);
+        }
         return res.json(account);
     } catch (error: any) {
         return res.json(error);
     }
 });
-app.get('/connect-account', async function (req, res) {
-    try {
 
-        const account = await stripe.accounts.list();
-        return res.json(account);
-    } catch (error: any) {
-        return res.json(error);
-    }
-});
 
 app.delete('/connect-account/:id', async function (req, res) {
     try {
@@ -132,6 +138,33 @@ app.post('/payment-intents', async function (req, res) {
         //         cvc: '314',
         //     },
         // });
+        // const paymentIntent = await stripe.paymentIntents.create({
+        //     amount: amount,
+        //     currency: currency,
+        //     payment_method: paymentIntentID,
+        //     confirmation_method: "automatic",
+        //     confirm: true,
+        //     return_url: `http://localhost:3000`,
+        //     description: "Order 12",
+        //     transfer_group: transferGroup,
+        // });
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: currency,
+            payment_method_types: ['card'],
+            use_stripe_sdk: true,
+        });
+        //   const clientSecret = paymentIntent.client_secret
+        return res.json(paymentIntent);
+    } catch (error: any) {
+        return res.json(error);
+    }
+})
+
+app.post('/payment-intents-2', async function (req, res) {
+    try {
+        const { amount, currency, paymentIntentID, transferGroup } = req.body;
+        // Create a PaymentMethod
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
             currency: currency,
@@ -147,6 +180,7 @@ app.post('/payment-intents', async function (req, res) {
         return res.json(error);
     }
 })
+
 
 app.get('/payment-intents/:paymentIntentID', async function (req, res) {
     try {
@@ -173,6 +207,17 @@ app.post('/transfer', async function (req, res) {
         return res.json(error);
     }
 });
+
+app.get('/transfer/:id', async function (req, res) {
+    try {
+        const { id } = req.params;
+        const transfer = await stripe.transfers.retrieve(id);
+        return res.json(transfer);
+    } catch (error: any) {
+        return res.json(error);
+    }
+});
+
 
 app.get('/balance-transactions/:id', async function (req, res) {
     try {
@@ -221,6 +266,17 @@ app.get('/customers', async function (req, res) {
     }
 });
 
+
+app.delete('/customers/:id', async function (req, res) {
+    try {
+        const { id } = req.params;
+        const customer = await stripe.customers.retrieve(id);
+        return res.json(customer);
+    } catch (error: any) {
+        return res.json(error);
+    }
+});
+
 app.post('/ephemeral-keys', async (request, response) => {
     const { customerID, nonce } = request.body;
 
@@ -255,8 +311,6 @@ app.post("/charge", async function (req, res) {
 // acct_1O9RSE2fKbxjrYrm
 
 
-
-
-app.listen(3000, () => {
+app.listen(5000, () => {
     console.log("Server is running on 3000")
 });
