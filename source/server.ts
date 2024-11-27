@@ -307,10 +307,19 @@ app.post("/charge", async function (req, res) {
     }
 })
 
+app.get("/charge/:id", async function (req, res) {
+    try {
+        const { id } = req.params;
+        const charges = await stripe.charges.retrieve(id);
+        return res.json(charges);
+    } catch (error: any) {
+        return res.json(error);
+    }
+})
 /***Final */
 // acct_1O9RSE2fKbxjrYrm
 
 
-app.listen(5000, () => {
+app.listen(3000, () => {
     console.log("Server is running on 3000")
 });
